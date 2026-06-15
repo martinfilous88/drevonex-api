@@ -1,0 +1,13 @@
+[
+  {
+    "id": "U-1781548360666",
+    "regNumber": 1,
+    "name": "Martin Filous",
+    "email": "martinfilous281@gmail.com",
+    "passwordHash": "ddfc6420a08432ced912a177686782a4:57af25e632d5d5aef4a55ff4c501e58f5bf4606a223eaa9c0c64bb7299fcfaae4c984dbc603e70d16680b66be8831ad238b79fde430a390a43106ba8ba9d6e40",
+    "isCompany": false,
+    "company": null,
+    "ico": null,
+    "createdAt": "2026-06-15T18:32:40.688Z"
+  }
+]

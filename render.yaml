@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: drevonex-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: REFRESH_MIN
+        value: 30
+      - key: FRONTEND_URL
+        value: https://drevonex.cz
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.seznam.cz
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_SECURE
+        value: true
+      - key: SMTP_USER
+        value: objednavky@drevonex.cz
+      - key: SMTP_PASS
+        sync: false
+      - key: OWNER_EMAIL
+        value: objednavky@drevonex.cz
+      - key: COMPANY_NAME
+        value: DřevoNex s.r.o.
+      - key: COMPANY_ADDRESS
+        value: Dandova 2619/13, Horní Počernice, 193 00 Praha 9
+      - key: COMPANY_ICO
+        value: 29631963
+      - key: COMPANY_DIC
+        value: CZ29631963
+      - key: COMPANY_PHONE
+        value: 730 148 595
+      - key: COMPANY_EMAIL
+        value: drevonex@email.cz
+      - key: COMPANY_BANK
+        value: 123456789/0100

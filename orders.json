@@ -1,0 +1,66 @@
+[
+  {
+    "id": "ORD-1781551600511",
+    "invoiceNumber": "FV-1781551600511",
+    "createdAt": "2026-06-15T19:26:40.511Z",
+    "items": [
+      {
+        "id": "p18003505",
+        "name": "Stavební řezivo - hraněné SM/JD hranol",
+        "price": "13 875 Kč",
+        "priceRaw": 13875,
+        "image": "https://d1cvtajkxcatn5.cloudfront.net/cache-buster-177227448010/pim/02%20bearbeitete-bilder/2023-05-03_Bauschnittholz/4019197/image-thumb__4019197__adaptive-product-detail-gallery/54148-0040_G.b89fb0ec.b3bd8ffe.jpg",
+        "qty": 1
+      }
+    ],
+    "total": 13875,
+    "totalBeforeDiscount": 13875,
+    "discountRate": 0,
+    "customer": {
+      "name": "Martin Filous",
+      "email": "martinfilous281@gmail.com",
+      "phone": "730148595",
+      "company": "",
+      "address": "Nova 173",
+      "city": "Lhota",
+      "zip": "277 14",
+      "note": ""
+    },
+    "userId": "U-1781548360666",
+    "userEmail": "martinfilous281@gmail.com",
+    "userName": "Martin Filous",
+    "status": "pending"
+  },
+  {
+    "id": "ORD-1781550528305",
+    "invoiceNumber": "FV-1781550528305",
+    "createdAt": "2026-06-15T19:08:48.305Z",
+    "items": [
+      {
+        "id": "p17997389",
+        "name": "Stavební řezivo - hraněné SM/JD fošny",
+        "price": "13 875 Kč",
+        "priceRaw": 13875,
+        "image": "https://d1cvtajkxcatn5.cloudfront.net/cache-buster-177227876610/pim/10%20Holzbau/bauholz/4082017/image-thumb__4082017__adaptive-product-detail-gallery/54468-0040%20-%20E%20-%20FITA%20STAFFEL%20I-IV%20-%20KD%2C%20S%C3%84GERAU.4edf95be.6abd8540.jpg",
+        "qty": 1
+      }
+    ],
+    "total": 13181,
+    "totalBeforeDiscount": 13875,
+    "discountRate": 0.05,
+    "customer": {
+      "name": "Martin Filous",
+      "email": "martinfilous281@gmail.com",
+      "phone": "730148595",
+      "company": "",
+      "address": "Nová 173",
+      "city": "Lhota",
+      "zip": "277 14",
+      "note": ""
+    },
+    "userId": "U-1781548360666",
+    "userEmail": "martinfilous281@gmail.com",
+    "userName": "Martin Filous",
+    "status": "new"
+  }
+]
