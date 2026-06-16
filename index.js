@@ -125,7 +125,14 @@ async function login() {
   }
   try {
     // 1) načíst přihlašovací stránku kvůli session cookies + skrytým polím formuláře
-        const page = await jfetch("https://www.jafholz.cz/login/login");
+            // 0) nejdřív navštívit homepage
+    const home = await jfetch("https://www.jafholz.cz/");
+    await home.text();
+    console.log("[jaf] homepage navštíveno");
+    await sleep(800);
+
+    // 1) načíst přihlašovací stránku
+    const page = await jfetch("https://www.jafholz.cz/login/login");
     const html = await page.text();
     console.log(`[jaf] login page status: ${page.status}, length: ${html.length}`);
     if (html.length < 5000) {
