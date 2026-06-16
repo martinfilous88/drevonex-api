@@ -309,16 +309,70 @@ async function discoverProducts() {
 
 /* ── Statické produkty z JSON ── */
 let cache = { updatedAt: null, loggedIn: false, items: [] };
-function loadStaticProducts() {
-  try {
-    const raw = JSON.parse(fs.readFileSync("./static_products.json", "utf8"));
-    const items = raw.map((p) => ({
+const CATEGORY_MARGIN = {
+  "OSB desky": 0.20,
+  "Stavební řezivo": 0.20,
+  "KVH masivní konstrukční hranoly": 0.20,
+  "BSH lepené vrstvené hranoly": 0.18,
+  "DUO/TRIO dřevěné hranoly": 0.18,
+};
+function sellPriceRaw(p) {
+  const margin = CATEGORY_MARGIN[p.category] ?? 0.20;
+  return Math.round((p.priceRaw || 0) * (1 + margin));
+}
+function variantLabel(name) {
+  const m = name.match(/(\d+\s*[×x]\s*\d+(?:\s*[×x]\s*\d+)?\s*mm)/i);
+  return m ? m[1].replace(/\s+/g, "") : name;
+}
+function baseProductName(name) {
+  return name
+    .replace(/\s+\d+\s*[×x]\s*\d+(?:\s*[×x]\s*\d+)?\s*mm/gi, "")
+    .replace(/\s+(C24|Si|NSi)$/i, "")
+    .trim();
+}
+function groupStaticProducts(raw) {
+  const groups = new Map();
+  raw.forEach((p) => {
+    const baseName = baseProductName(p.name);
+    const key = `${p.category}::${baseName}`;
+    const variant = {
+      id: p.id,
+      label: variantLabel(p.name),
+      name: p.name,
+      purchasePriceRaw: p.priceRaw,
+      priceRaw: sellPriceRaw(p),
+      price: p.priceRaw ? sellPriceRaw(p).toLocaleString("cs-CZ") + " Kč" : "Cena na dotaz",
+      availability: p.availability || "in_stock",
+    };
+    if (!groups.has(key)) {
+      groups.set(key, {
+        id: `static-${key.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}`,
+        name: baseName,
+        title: baseName,
+        category: p.category,
+        availability: p.availability || "in_stock",
+        variants: [],
+      });
+    }
+    groups.get(key).variants.push(variant);
+  });
+  return [...groups.values()].map((p) => {
+    p.variants.sort((a, b) => (a.priceRaw || 0) - (b.priceRaw || 0));
+    const first = p.variants[0];
+    return {
       ...p,
-      price: p.priceRaw ? p.priceRaw.toLocaleString("cs-CZ") + " Kč" : "Cena na dotaz",
+      priceRaw: first?.priceRaw || 0,
+      price: p.variants.length > 1 ? `od ${first.price}` : first?.price || "Cena na dotaz",
       image: null,
       mpn: null,
       checkedAt: new Date().toISOString(),
-    }));
+    };
+  });
+}
+function loadStaticProducts() {
+  try {
+    const raw = JSON.parse(fs.readFileSync("./static_products.json", "utf8"));
+    const items = groupStaticProducts(raw);
     cache = { updatedAt: new Date().toISOString(), loggedIn: false, total: items.length, items };
     fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
     console.log(`[jaf] načteno ${items.length} statických produktů`);
