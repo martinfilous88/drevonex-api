@@ -396,7 +396,7 @@ async function refreshAll({ rediscover = false } = {}) {
     done += batch.length;
     if (done % 30 < CONCURRENCY) console.log(`[jaf]  …${done}/${productList.length}`);
     // průběžně ukládáme, aby API mělo data i během dlouhého běhu
-    cache = { updatedAt: new Date().toISOString(), loggedIn, total: productList.length, items: [...items] };
+    const allItems = [...items, ...STATIC_OSB]; cache = { updatedAt: new Date().toISOString(), loggedIn, total: allItems.length, items: allItems };
     await sleep(700);
   }
 
