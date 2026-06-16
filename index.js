@@ -68,38 +68,6 @@ function stripeEnabled() {
   return !!(stripe && STRIPE_SECRET_KEY && !STRIPE_SECRET_KEY.includes("..."));
 }
 
-/* ── Statické OSB desky (pevné rozměry, vždy skladem) ── */
-const STATIC_OSB = [
-  // OSB 3 Kronospan P+D nebroušené
-  { id: "osb-kron-n9",  name: "OSB 3 Kronospan P+D nebroušené 2500×1250×9 mm",  category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-n10", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×10 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-n12", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×12 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-n15", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×15 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-n18", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×18 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-n22", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×22 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  // OSB 3 Kronospan P+D broušené
-  { id: "osb-kron-b10", name: "OSB 3 Kronospan P+D broušené 2500×1250×10 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-b12", name: "OSB 3 Kronospan P+D broušené 2500×1250×12 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-b15", name: "OSB 3 Kronospan P+D broušené 2500×1250×15 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-b18", name: "OSB 3 Kronospan P+D broušené 2500×1250×18 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-kron-b22", name: "OSB 3 Kronospan P+D broušené 2500×1250×22 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  // OSB 3 Egger P+D
-  { id: "osb-egger-10", name: "OSB 3 Egger P+D 2500×1250×10 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-egger-12", name: "OSB 3 Egger P+D 2500×1250×12 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-egger-15", name: "OSB 3 Egger P+D 2500×1250×15 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-egger-18", name: "OSB 3 Egger P+D 2500×1250×18 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-egger-22", name: "OSB 3 Egger P+D 2500×1250×22 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  // OSB 4 Kronospan (vlhkostně odolné)
-  { id: "osb4-kron-12", name: "OSB 4 Kronospan P+D 2500×1250×12 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb4-kron-15", name: "OSB 4 Kronospan P+D 2500×1250×15 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb4-kron-18", name: "OSB 4 Kronospan P+D 2500×1250×18 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb4-kron-22", name: "OSB 4 Kronospan P+D 2500×1250×22 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  // Velké formáty (profi)
-  { id: "osb-profi-9",  name: "OSB 3 Kronospan P+D nebroušené 2800×1250×9 mm",  category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-profi-12", name: "OSB 3 Kronospan P+D nebroušené 2800×1250×12 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-  { id: "osb-profi-18", name: "OSB 3 Kronospan P+D nebroušené 2800×1250×18 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
-].map((p) => ({ ...p, price: "Cena na dotaz", image: null, mpn: null, checkedAt: new Date().toISOString() }));
-
 /* ── Cílové kategorie – stavební řezivo, hranoly, BSH, konstrukční prvky, OSB ── */
 const TARGET_CATEGORIES = [
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/stavebni-rezivo~c829359",         // Stavební řezivo
@@ -339,73 +307,31 @@ async function discoverProducts() {
   return list;
 }
 
-/* ── Hlavní smyčka aktualizace ── */
+/* ── Statické produkty z JSON ── */
 let cache = { updatedAt: null, loggedIn: false, items: [] };
-let productList = [];
-try {
-  cache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
-  console.log("[jaf] cache načtena z disku");
-  // přidáme statické OSB pokud ještě nejsou
-  const existingIds = new Set(cache.items.map((i) => i.id));
-  const missingOsb = STATIC_OSB.filter((p) => !existingIds.has(p.id));
-  if (missingOsb.length) {
-    cache.items.push(...missingOsb);
-    cache.total = cache.items.length;
-    console.log(`[jaf] přidáno ${missingOsb.length} statických OSB do cache`);
-  }
-} catch {
-  /* první spuštění */
-}
-try {
-  productList = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf8"));
-  console.log(`[jaf] seznam ${productList.length} produktů načten z disku`);
-} catch {
-  /* první spuštění */
-}
-
-async function scrapeOne(p) {
+function loadStaticProducts() {
   try {
-    const res = await jfetch(p.url);
-    const html = await res.text();
-    const parsed = parseProduct(html);
-    return { ...p, ...parsed, error: null, checkedAt: new Date().toISOString() };
+    const raw = JSON.parse(fs.readFileSync("./static_products.json", "utf8"));
+    const items = raw.map((p) => ({
+      ...p,
+      price: p.priceRaw ? p.priceRaw.toLocaleString("cs-CZ") + " Kč" : "Cena na dotaz",
+      image: null,
+      mpn: null,
+      checkedAt: new Date().toISOString(),
+    }));
+    cache = { updatedAt: new Date().toISOString(), loggedIn: false, total: items.length, items };
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
+    console.log(`[jaf] načteno ${items.length} statických produktů`);
   } catch (e) {
-    const prev = cache.items.find((i) => i.id === p.id);
-    return prev ? { ...prev, error: e.message } : { ...p, availability: "unknown", error: e.message };
+    console.warn("[jaf] static_products.json nenalezen, používám prázdnou cache");
   }
 }
+loadStaticProducts();
 
+/* ── Scrapování vypnuto – používáme statická data ── */
 let refreshing = false;
-async function refreshAll({ rediscover = false } = {}) {
-  if (refreshing) return;
-  refreshing = true;
-  console.log("[jaf] aktualizuji dostupnost…");
-  if (!loggedIn) await login();
-
-  if (rediscover || productList.length === 0) {
-    productList = await discoverProducts();
-  }
-
-  const items = [];
-  let done = 0;
-  // zpracování po dávkách (šetrné k JAF serveru)
-  for (let i = 0; i < productList.length; i += CONCURRENCY) {
-    const batch = productList.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(batch.map(scrapeOne));
-    items.push(...results);
-    done += batch.length;
-    if (done % 30 < CONCURRENCY) console.log(`[jaf]  …${done}/${productList.length}`);
-    // průběžně ukládáme, aby API mělo data i během dlouhého běhu
-    const allItems = [...items, ...STATIC_OSB]; cache = { updatedAt: new Date().toISOString(), loggedIn, total: allItems.length, items: allItems };
-    await sleep(700);
-  }
-
-  // připojíme statické OSB desky
-  const allItems = [...items, ...STATIC_OSB];
-  cache = { updatedAt: new Date().toISOString(), loggedIn, total: allItems.length, items: allItems };
-  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  refreshing = false;
-  console.log(`[jaf] hotovo – ${items.length} produktů + ${STATIC_OSB.length} OSB`);
+async function refreshAll() {
+  console.log("[jaf] refresh skipped – používáme statická data");
 }
 
 /* ── API ── */
