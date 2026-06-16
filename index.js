@@ -69,6 +69,33 @@ function stripeEnabled() {
 }
 
 /* ── Cílové kategorie – pouze stavební řezivo, hranoly, BSH, konstrukční prvky ── */
+/* ── Statické OSB desky (pevné rozměry, vždy skladem) ── */
+const STATIC_OSB = [
+  { id: "osb-kron-n9",  name: "OSB 3 Kronospan P+D nebroušené 2500×1250×9 mm",  category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-n10", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×10 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-n12", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×12 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-n15", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×15 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-n18", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×18 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-n22", name: "OSB 3 Kronospan P+D nebroušené 2500×1250×22 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-b10", name: "OSB 3 Kronospan P+D broušené 2500×1250×10 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-b12", name: "OSB 3 Kronospan P+D broušené 2500×1250×12 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-b15", name: "OSB 3 Kronospan P+D broušené 2500×1250×15 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-b18", name: "OSB 3 Kronospan P+D broušené 2500×1250×18 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-kron-b22", name: "OSB 3 Kronospan P+D broušené 2500×1250×22 mm",   category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-egger-10", name: "OSB 3 Egger P+D 2500×1250×10 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-egger-12", name: "OSB 3 Egger P+D 2500×1250×12 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-egger-15", name: "OSB 3 Egger P+D 2500×1250×15 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-egger-18", name: "OSB 3 Egger P+D 2500×1250×18 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-egger-22", name: "OSB 3 Egger P+D 2500×1250×22 mm",                category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb4-kron-12", name: "OSB 4 Kronospan P+D 2500×1250×12 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb4-kron-15", name: "OSB 4 Kronospan P+D 2500×1250×15 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb4-kron-18", name: "OSB 4 Kronospan P+D 2500×1250×18 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb4-kron-22", name: "OSB 4 Kronospan P+D 2500×1250×22 mm",            category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-profi-9",  name: "OSB 3 Kronospan P+D nebroušené 2800×1250×9 mm",  category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-profi-12", name: "OSB 3 Kronospan P+D nebroušené 2800×1250×12 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+  { id: "osb-profi-18", name: "OSB 3 Kronospan P+D nebroušené 2800×1250×18 mm", category: "OSB desky", availability: "in_stock", priceRaw: 0 },
+].map((p) => ({ ...p, price: "Cena na dotaz", image: null, mpn: null, checkedAt: new Date().toISOString() }));
+
 const TARGET_CATEGORIES = [
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/stavebni-rezivo~c829359",         // Stavební řezivo
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/kvh-masivni-konstrukcni-hranoly~c829361", // KVH hranoly
@@ -308,8 +335,16 @@ async function discoverProducts() {
 let cache = { updatedAt: null, loggedIn: false, items: [] };
 let productList = [];
 try {
+  try {
   cache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
   console.log("[jaf] cache načtena z disku");
+  const existingIds = new Set(cache.items.map((i) => i.id));
+  const missingOsb = STATIC_OSB.filter((p) => !existingIds.has(p.id));
+  if (missingOsb.length) {
+    cache.items.push(...missingOsb);
+    cache.total = cache.items.length;
+    console.log(`[jaf] přidáno ${missingOsb.length} statických OSB do cache`);
+  }
 } catch {
   /* první spuštění */
 }
@@ -357,10 +392,11 @@ async function refreshAll({ rediscover = false } = {}) {
     await sleep(700);
   }
 
-  cache = { updatedAt: new Date().toISOString(), loggedIn, total: productList.length, items };
+    const allItems = [...items, ...STATIC_OSB];
+  cache = { updatedAt: new Date().toISOString(), loggedIn, total: allItems.length, items: allItems };
   fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
   refreshing = false;
-  console.log(`[jaf] hotovo – ${items.length} produktů`);
+  console.log(`[jaf] hotovo – ${items.length} produktů + ${STATIC_OSB.length} OSB`);
 }
 
 /* ── API ── */
