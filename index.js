@@ -75,6 +75,7 @@ const TARGET_CATEGORIES = [
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/duotrio-drevene-hranoly~c829378",   // DUO/TRIO hranoly
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/bsh-lepene-vrstvene-hranoly~c829414", // BSH nosníky
   "https://www.jafholz.cz/shop/materialy-pro-drevostavby/drevene-konstrukcni-prvky~c6804272", // Dřevěné konstrukční prvky (LVL, I-trámy)
+  "https://www.jafholz.cz/shop/plosne-materialy/osb-desky~c14208428", // OSB desky
 ];
 
 /* ── Jednoduchý cookie jar pro udržení přihlášení ── */
@@ -224,8 +225,8 @@ async function discoverProducts() {
   const seenCats = new Set();
   const queue = [...TARGET_CATEGORIES];
   const products = new Map(); // pId -> { id, name, url, category }
-  const KEYWORDS = /\b(trám|fošna|krokev|lať|lata|nosník|hran|bsh|kvh|duo|trio|lvl|i[ -]?nosník|rezivo)\b/i;
-  const BLACKLIST = /deska|panel|palubka|obklad|hoblovan|přísluš|spojka|kotva|vrut|hřeb|závit|prkno|podlaha|stěna|plot|pero|drážka|lišta|rámus|stojina|základ|schrán|bedně|izolac|foli|křiž|kryt|těsněn|hmož|šroub|laťovka|dýha|truhl/i;
+  const KEYWORDS = /\b(trám|fošna|krokev|lať|lata|nosník|hran|bsh|kvh|duo|trio|lvl|i[ -]?nosník|rezivo|osb)\b/i;
+  const BLACKLIST = /|panel|palubka|obklad|hoblovan|přísluš|spojka|kotva|vrut|hřeb|závit|prkno|podlaha|stěna|plot|pero|drážka|lišta|rámus|stojina|základ|schrán|bedně|izolac|foli|křiž|kryt|těsněn|hmož|šroub|laťovka|dýha|truhl/i;
 
   while (queue.length && products.size < MAX_PRODUCTS) {
     const catUrl = queue.shift();
@@ -258,7 +259,7 @@ async function discoverProducts() {
         const pm = abs.match(/~p(\d+)/);
         if (pm && !products.has(pm[1]) && products.size < MAX_PRODUCTS) {
           const name = $(a).text().replace(/\s+/g, " ").trim();
-          if (KEYWORDS.test(name) && !BLACKLIST.test(name)) {
+         if (KEYWORDS.test(name) && !BLACKLIST.test(name)) {
             products.set(pm[1], {
               id: `p${pm[1]}`,
               name: name,
