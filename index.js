@@ -382,7 +382,7 @@ app.post("/api/stock/refresh", (_, res) => {
   res.json({ started: true, refreshing: true });
 });
 
-app.post("/api/stock/rediscover", (_, res) => {
+app.get("/api/stock/rediscover", (_, res) => {
   refreshAll({ rediscover: true });
   res.json({ started: true, rediscover: true });
 });
