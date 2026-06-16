@@ -377,7 +377,7 @@ app.use(express.json());
 
 app.get("/api/stock", (_, res) => res.json(cache));
 
-app.post("/api/stock/refresh", (_, res) => {
+app.get("/api/stock/refresh", (_, res) => {
   refreshAll(); // běží na pozadí, průběžné výsledky jsou hned v /api/stock
   res.json({ started: true, refreshing: true });
 });
