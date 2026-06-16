@@ -97,7 +97,15 @@ async function jfetch(url, opts = {}) {
     ...opts,
     headers: {
       "User-Agent": UA,
-      "Accept-Language": "cs-CZ,cs;q=0.9",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Connection": "keep-alive",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "same-origin",
+      "Cache-Control": "max-age=0",
       Cookie: cookieHeader(),
       ...(opts.headers || {}),
     },
@@ -117,11 +125,19 @@ async function login() {
   }
   try {
     // 1) načíst přihlašovací stránku kvůli session cookies + skrytým polím formuláře
-    const page = await jfetch("https://www.jafholz.cz/login/login");
+        const page = await jfetch("https://www.jafholz.cz/login/login");
     const html = await page.text();
+    console.log(`[jaf] login page status: ${page.status}, length: ${html.length}`);
+    if (html.length < 5000) {
+      console.log(`[jaf] login page snippet: ${html.substring(0, 500)}`);
+    }
     const $ = cheerio.load(html);
     const form = $("form").filter((_, f) => $(f).find("input[type='password']").length > 0).first();
-    if (!form.length) throw new Error("přihlašovací formulář nenalezen");
+    if (!form.length) {
+      const allForms = $("form").length;
+      console.warn(`[jaf] forms found: ${allForms}, password inputs: ${$("input[type='password']").length}`);
+      throw new Error("přihlašovací formulář nenalezen");
+    }
 
     const action = new URL(form.attr("action") || "/login/login", "https://www.jafholz.cz").href;
     const body = new URLSearchParams();
