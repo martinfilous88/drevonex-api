@@ -46,6 +46,8 @@ const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || "";
 const COMPANY_ICO = process.env.COMPANY_ICO || "";
 const COMPANY_DIC = process.env.COMPANY_DIC || "";
 const COMPANY_PHONE = process.env.COMPANY_PHONE || "";
+const DELIVERY_ORIGIN_ADDRESS = process.env.DELIVERY_ORIGIN_ADDRESS || COMPANY_ADDRESS;
+const MAPY_API_KEY = process.env.MAPY_API_KEY || "";
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL || "";
 const COMPANY_BANK = process.env.COMPANY_BANK || "";
 
@@ -560,6 +562,50 @@ app.post("/api/order", async (req, res) => {
 
 app.get("/api/orders", (_, res) => {
   res.json(loadOrders());
+});
+
+async function mapyGeocode(query) {
+  const url = new URL("https://api.mapy.cz/v1/geocode");
+  url.searchParams.set("query", query);
+  url.searchParams.set("lang", "cs");
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("apikey", MAPY_API_KEY);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Geokódování selhalo");
+  const data = await r.json();
+  const item = data.items?.[0];
+  if (!item?.position) throw new Error("Adresa nebyla nalezena");
+  return item.position;
+}
+
+async function mapyRouteKm(from, to) {
+  const url = new URL("https://api.mapy.cz/v1/routing/route");
+  url.searchParams.set("start", `${from.lon},${from.lat}`);
+  url.searchParams.set("end", `${to.lon},${to.lat}`);
+  url.searchParams.set("routeType", "car_fast");
+  url.searchParams.set("apikey", MAPY_API_KEY);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Výpočet trasy selhal");
+  const data = await r.json();
+  const meters = data.length || data.distance || data.geometry?.properties?.length;
+  if (!meters) throw new Error("Trasa nemá vzdálenost");
+  return Math.ceil(Number(meters) / 1000);
+}
+
+app.post("/api/delivery/quote", async (req, res) => {
+  try {
+    const { address, city, zip } = req.body || {};
+    if (!MAPY_API_KEY) return res.status(503).json({ error: "Chybí MAPY_API_KEY." });
+    if (!DELIVERY_ORIGIN_ADDRESS) return res.status(503).json({ error: "Chybí DELIVERY_ORIGIN_ADDRESS." });
+    if (!address || !city || !zip) return res.status(400).json({ error: "Vyplňte adresu, město a PSČ." });
+    const destinationAddress = `${address}, ${zip} ${city}, Česko`;
+    const from = await mapyGeocode(DELIVERY_ORIGIN_ADDRESS);
+    const to = await mapyGeocode(destinationAddress);
+    const km = await mapyRouteKm(from, to);
+    res.json({ km, pricePerKm: 43, deliveryBase: km * 43, origin: DELIVERY_ORIGIN_ADDRESS, destination: destinationAddress });
+  } catch (e) {
+    res.status(400).json({ error: e.message || "Dopravu se nepodařilo spočítat." });
+  }
 });
 
 /* ── Uživatelé / autentizace ── */
