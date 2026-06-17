@@ -407,7 +407,9 @@ function invoiceHTML(order, user) {
   }).join("");
 
   const subtotal = order.totalBeforeDiscount ?? order.total;
-  const discount = subtotal - order.total;
+  const deliveryTotal = order.deliveryTotal || 0;
+  const productsTotal = order.productsTotal ?? Math.max(0, (order.total || 0) - deliveryTotal);
+  const discount = Math.max(0, subtotal - order.total);
   const vat = Math.round(order.total * 0.21);
 
   return `<!DOCTYPE html>
@@ -450,7 +452,9 @@ function invoiceHTML(order, user) {
 
   <div style="text-align:right;margin-bottom:24px;">
     ${discount > 0 ? `<p style="margin:0 0 4px;font-size:13px;color:#5E9E6A;">Sleva: −${fmtCZK(discount)}</p>` : ""}
-    <p style="margin:0 0 4px;font-size:13px;color:#666;">Mezisoučet: ${fmtCZK(order.total)}</p>
+    <p style="margin:0 0 4px;font-size:13px;color:#666;">Zboží bez DPH: ${fmtCZK(productsTotal)}</p>
+    ${deliveryTotal > 0 ? `<p style="margin:0 0 4px;font-size:13px;color:#666;">Doprava bez DPH: ${fmtCZK(deliveryTotal)}</p>` : ""}
+    <p style="margin:0 0 4px;font-size:13px;color:#666;">Mezisoučet bez DPH: ${fmtCZK(order.total)}</p>
     <p style="margin:0 0 4px;font-size:13px;color:#666;">DPH 21 %: ${fmtCZK(vat)}</p>
     <p style="margin:0;font-size:18px;font-weight:700;color:#B8860B;">CELKEM K ÚHRADĚ: ${fmtCZK(order.total + vat)}</p>
   </div>
@@ -472,7 +476,7 @@ app.post("/api/order", async (req, res) => {
     return res.status(401).json({ error: "Pro objednání se musíte přihlásit." });
   }
 
-  const { items, total, totalBeforeDiscount, discountRate, customer } = req.body;
+  const { items, total, productsTotal, deliveryTotal, totalBeforeDiscount, discountRate, customer } = req.body;
   if (!items || !items.length || !customer?.name || !customer?.email || !customer?.phone) {
     return res.status(400).json({ error: "Vyplňte jméno, email a telefon." });
   }
@@ -484,6 +488,8 @@ app.post("/api/order", async (req, res) => {
     createdAt: new Date().toISOString(),
     items,
     total: total || 0,
+    productsTotal: productsTotal || Math.max(0, (total || 0) - (deliveryTotal || 0)),
+    deliveryTotal: deliveryTotal || 0,
     totalBeforeDiscount: totalBeforeDiscount || total,
     discountRate: discountRate || 0,
     customer,
@@ -687,7 +693,7 @@ app.post("/api/create-checkout-session", async (req, res) => {
     return res.status(401).json({ error: "Pro placení se musíte přihlásit." });
   }
 
-  const { items, total, totalBeforeDiscount, discountRate, customer } = req.body || {};
+  const { items, total, productsTotal, deliveryTotal, totalBeforeDiscount, discountRate, customer } = req.body || {};
   if (!items || !items.length) {
     return res.status(400).json({ error: "Košík je prázdný." });
   }
@@ -702,6 +708,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
     createdAt: new Date().toISOString(),
     items,
     total: total || 0,
+    productsTotal: productsTotal || Math.max(0, (total || 0) - (deliveryTotal || 0)),
+    deliveryTotal: deliveryTotal || 0,
     totalBeforeDiscount: totalBeforeDiscount || total,
     discountRate: discountRate || 0,
     customer: customer || {},
@@ -728,6 +736,16 @@ app.post("/api/create-checkout-session", async (req, res) => {
       quantity: it.qty || 1,
     };
   });
+  if ((deliveryTotal || 0) > 0) {
+    lineItems.push({
+      price_data: {
+        currency: "czk",
+        product_data: { name: "Doprava" },
+        unit_amount: Math.round((deliveryTotal || 0) * 100),
+      },
+      quantity: 1,
+    });
+  }
 
   // Sleva jako kupón (pokud je)
   let discounts = [];
